@@ -1,0 +1,102 @@
+import sqlite3
+
+conn = sqlite3.connect("students.db")
+cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    age INTEGER,
+    grade TEXT,
+    email TEXT
+)
+""")
+conn.commit()
+
+def add_student():
+    name = input("Enter name: ").strip()
+    age = input("Enter age: ").strip()
+    grade = input("Enter grade/class: ").strip()
+    email = input("Enter email: ").strip()
+
+    cursor.execute("INSERT INTO students (name, age, grade, email) VALUES (?, ?, ?, ?)",
+                   (name, age, grade, email))
+    conn.commit()
+    print("✅ Student added successfully.")
+
+def view_students():
+    cursor.execute("SELECT * FROM students")
+    rows = cursor.fetchall()
+    if not rows:
+        print("⚠ No students found.")
+    else:
+        print("\n📋 Student List:")
+        print("-" * 50)
+        for row in rows:
+            print(f"ID: {row[0]} | Name: {row[1]} | Age: {row[2]} | Grade: {row[3]} | Email: {row[4]}")
+        print("-" * 50)
+
+def search_student():
+    name = input("Enter name to search: ").strip()
+    cursor.execute("SELECT * FROM students WHERE name LIKE ?", ('%' + name + '%',))
+    rows = cursor.fetchall()
+    if rows:
+        for row in rows:
+            print(f"ID: {row[0]} | Name: {row[1]} | Age: {row[2]} | Grade: {row[3]} | Email: {row[4]}")
+    else:
+        print("❌ No matching student found.")
+
+def update_student():
+    student_id = input("Enter student ID to update: ").strip()
+    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+    if not cursor.fetchone():
+        print("❌ Student not found.")
+        return
+
+    name = input("Enter new name: ").strip()
+    age = input("Enter new age: ").strip()
+    grade = input("Enter new grade/class: ").strip()
+    email = input("Enter new email: ").strip()
+
+    cursor.execute("UPDATE students SET name=?, age=?, grade=?, email=? WHERE id=?",
+                   (name, age, grade, email, student_id))
+    conn.commit()
+    print("✅ Student updated successfully.")
+
+def delete_student():
+    student_id = input("Enter student ID to delete: ").strip()
+    cursor.execute("DELETE FROM students WHERE id = ?", (student_id,))
+    conn.commit()
+    print("🗑 Student deleted successfully.")
+
+def menu():
+    while True:
+        print("\n📚 Student Management System")
+        print("1. Add Student")
+        print("2. View All Students")
+        print("3. Search Student")
+        print("4. Update Student")
+        print("5. Delete Student")
+        print("6. Exit")
+
+        choice = input("Select an option (1-6): ").strip()
+
+        if choice == "1":
+            add_student()
+        elif choice == "2":
+            view_students()
+        elif choice == "3":
+            search_student()
+        elif choice == "4":
+            update_student()
+        elif choice == "5":
+            delete_student()
+        elif choice == "6":
+            print("👋 Exiting... Goodbye!")
+            break
+        else:
+            print("⚠ Invalid choice. Please try again.")
+            
+if _name_ == "_main_":
+    menu()
+    conn.close()
