@@ -1,0 +1,44 @@
+import requests
+
+API_URL = "https://api.frankfurter.app/latest"
+
+def fetch_rates(base: str = "USD") -> dict:
+    """Fetch conversion rates from Frankfurter API."""
+    resp = requests.get(f"{API_URL}?from={base}", timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+    return data["rates"]
+
+def convert(amount: float, rates: dict, to_currency: str) -> float:
+    """Convert amount using provided rates."""
+    try:
+        rate = rates[to_currency.upper()]
+    except KeyError:
+        raise ValueError(f"Unsupported currency: {to_currency}")
+    return round(amount * rate, 4)
+
+def main():
+    base = input("Base currency (e.g., USD): ").strip().upper() or "USD"
+    try:
+        rates = fetch_rates(base)
+    except Exception as e:
+        print("Error fetching rates:", e)
+        return
+
+    to_curr = input("Convert to currency (e.g., EUR): ").strip().upper()
+    try:
+        amount = float(input(f"Amount in {base}: "))
+    except ValueError:
+        print("Invalid amount.")
+        return
+
+    try:
+        result = convert(amount, rates, to_curr)
+    except ValueError as e:
+        print(e)
+        return
+
+    print(f"{amount:.2f} {base} → {result:.2f} {to_curr}")
+
+if _name_ == "_main_":
+    main()
